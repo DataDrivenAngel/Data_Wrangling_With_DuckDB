@@ -171,3 +171,64 @@ plot1 <- ggplot2::ggplot(timing_results, ggplot2::aes(x = expr, y = time / 1e6, 
 
 # Print the plots
 print(plot1)
+
+# Create a function to benchmark dplyr and duckplyr for different dataset sizes
+benchmark_tree_stats <- function() {
+  sizes <- c(1, 2, 5, 10)  # Define the dataset size multipliers
+  results <- data.frame(size = integer(), method = character(), time = numeric(), stringsAsFactors = FALSE)
+  
+  for (size in sizes) {
+    # Create a larger dataset by repeating the original dataset
+    large_dc_trees <- dc_trees[rep(seq_len(nrow(dc_trees)), size), ]
+    
+    # Benchmark dplyr
+    dplyr_time <- microbenchmark::microbenchmark(
+      dplyr = {
+        large_dc_trees %>%
+          summarize(
+            mean_height = mean(HEIGHT, na.rm = TRUE),
+            median_height = median(HEIGHT, na.rm = TRUE),
+            min_height = min(HEIGHT, na.rm = TRUE),
+            max_height = max(HEIGHT, na.rm = TRUE),
+            sd_height = sd(HEIGHT, na.rm = TRUE)
+          )
+      },
+      times = 10
+    )$time
+    
+    # Benchmark duckplyr
+    duckplyr_time <- microbenchmark::microbenchmark(
+      duckplyr = {
+        large_dc_trees %>%
+          duckplyr::as_duckplyr_df() %>%
+          summarize(
+            mean_height = mean(HEIGHT, na.rm = TRUE),
+            median_height = median(HEIGHT, na.rm = TRUE),
+            min_height = min(HEIGHT, na.rm = TRUE),
+            max_height = max(HEIGHT, na.rm = TRUE),
+            sd_height = sd(HEIGHT, na.rm = TRUE)
+          )
+      },
+      times = 10
+    )$time
+    
+    # Store results
+    results <- rbind(results, data.frame(size = size, method = "dplyr", time = mean(dplyr_time)))
+    results <- rbind(results, data.frame(size = size, method = "duckplyr", time = mean(duckplyr_time)))
+  }
+  
+  return(results)
+}
+
+# Run the benchmark
+benchmark_results <- benchmark_tree_stats()
+
+# Plot the results
+plot2 <- ggplot2::ggplot(benchmark_results, ggplot2::aes(x = size, y = time / 1e6, color = method)) +
+  ggplot2::geom_line() +
+  ggplot2::geom_point() +
+  ggplot2::labs(title = "Benchmark of dplyr vs duckplyr", x = "Dataset Size Multiplier", y = "Time (ms)") +
+  ggplot2::theme_minimal()
+
+# Print the plot
+print(plot2)

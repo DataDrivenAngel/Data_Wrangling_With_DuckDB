@@ -1,7 +1,7 @@
 ---
 title: "Wrangling Data with DuckDB"
 author: "Will Angel"
-date: "2024-10-23"
+date: "2024-10-29"
 location: "RGOV24"
 format:
   revealjs: 
@@ -15,7 +15,7 @@ editor: visual
 ## Key Takeaways
 1. DuckDB is a *very* fast in-process database.
 2. Duckplyr is a package for using Dplyer on DuckDB
-3. You can use Duckplyr as a *drop in replacement to get a 10-20x speedup for dplyr code*
+3. You can use Duckplyr as a *drop in replacement to get a 10-20x speedup for dplyr code on large datasets*
 
 ## Agenda
 * What is DuckDB
@@ -28,7 +28,7 @@ editor: visual
 
 # DuckDB?
 
-## What is DuckDB?
+## What is DuckDB? {.smaller}
 
 DuckDB is an open source fast in-process analytical database!
 
@@ -37,7 +37,7 @@ DuckDB is an open source fast in-process analytical database!
 * In-process: **Runs locally** without a server, like SQLite.
 * Analytical: DuckDB is optimized for **fast aggregations** and analytical queries to support online analytical processing (OLAP). DuckDB supports ACID transactions, but is not as fast for online transaction processing (OLTP) workloads.
 * Database: DuckDB can be used to efficiently store relational data.
---TODO: fix formatting and font size
+
 
 ## Why you should care!
 * DuckDB is a great tool for local SQL analysis. Import a file and you can do SQL locally!
@@ -51,7 +51,7 @@ DuckDB is an open source fast in-process analytical database!
 ##  When should you use DuckDB
 * You should use DuckDB for data processing!
 * You have medium largish data
-* You don't want the hassle of procuring databricks
+* You don't want the hassle of procuring larger computing resources
 
 ##  How can you use DuckDB
 * Directly use the DuckDB package.
@@ -73,28 +73,60 @@ install.packages("duckplyr")
 ##  Data processing performance and profiling
 
 * DuckDB:
-	* versus dplyer
-	* versus dbplyer
+	* versus dplyr
+	* versus dbplyr
 	* versus data.frame
 	* versus tibbles
 	* versus data.table
 	* versus polars
 
+## Dplyr versus Duckplyr
 
+To compare Dplyr and Duckplyr performance, we'll look at the Global Lake area, Climate, and Population Dataset (GLCP). This includes almost 80 million records of temperature data for lakes, for a 3.9GB Csv file. 
+
+Dplyr:
+```
+data %>%
+  distinct(HYBAS_ID) %>%
+  nrow()
+```
+
+Duckplyr:
+```
+data %>%
+  duckplyr::as_duckplyr_tibble() %>%
+  distinct(HYBAS_ID) %>%
+  nrow()
+```
+
+
+
+
+
+## dply
+
+```
+benchmark_result <- microbenchmark(
+  dplyr = {
+    data %>%
+      distinct(HYBAS_ID) %>%
+      nrow()
+  },
+  duckdb = {
+    dbGetQuery(con, "SELECT COUNT(DISTINCT HYBAS_ID) FROM data")[[1]]
+  },
+  duckplyr = {
+    data %>%
+      duckplyr::as_duckplyr_tibble() %>%
+      distinct(HYBAS_ID) %>%
+      nrow()
+  },
+  times = trials
+)
+```
 
 ---
 
-
-<!-- Profiling:
-
-1, 10 mb 100mb, 1G, 10G, 50G
-
-Sensor data?
-
-
-Arrow usage in R? 
-
-Memory usage of R -->
 
 
 

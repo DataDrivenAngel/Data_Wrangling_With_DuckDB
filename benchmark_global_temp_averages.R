@@ -1,4 +1,4 @@
-# Read the data from average_temp.csv and count distinct hybas ids
+# Read the data from average_temp.csv and calculate average temperatures by year
 library(readr)
 library(dplyr)
 library(microbenchmark)
@@ -8,7 +8,7 @@ library(duckplyr)
 
 # Specify the path to the CSV file
 file_path <- "data/average_temp.csv"
-trials = 25
+trials = 3
 
 # Read the entire CSV file
 data <- read_csv(file_path)
@@ -17,32 +17,33 @@ data <- read_csv(file_path)
 con <- dbConnect(duckdb())
 duckdb_register(con, "data", data)
 
-# Benchmark the distinct function for dplyr, DuckDB, and duckplyr
+# Benchmark the yearly average calculations for dplyr, DuckDB, and duckplyr
 benchmark_result <- microbenchmark(
   dplyr = {
     data %>%
-      distinct(HYBAS_ID) %>%
-      nrow()
+      group_by(year) %>%
+      summarise(avg_temp = mean(mean_temp_k, na.rm = TRUE))
   },
   duckdb = {
-    dbGetQuery(con, "SELECT COUNT(DISTINCT HYBAS_ID) FROM data")[[1]]
+    dbGetQuery(con, "SELECT year, AVG(mean_temp_k) as avg_temp FROM data GROUP BY year ORDER BY year")
   },
   duckplyr = {
     data %>%
       duckplyr::as_duckplyr_tibble() %>%
-      distinct(HYBAS_ID) %>%
-      nrow()
+      group_by(year) %>%
+      summarise(avg_temp = mean(mean_temp_k, na.rm = TRUE))
   },
   times = trials
 )
 
-# Get the number of distinct hybas ids
-distinct_hybas_count <- data %>%
-  distinct(HYBAS_ID) %>%
-  nrow()
+# Calculate yearly averages using dplyr for verification
+yearly_averages <- data %>%
+  group_by(year) %>%
+  summarise(avg_temp = mean(mean_temp_k, na.rm = TRUE))
 
-# Print the count of distinct hybas ids
-print(paste("Number of distinct HYBAS IDs:", distinct_hybas_count))
+# Print the yearly averages
+print("Yearly Average Temperatures:")
+print(yearly_averages)
 
 # Print the benchmark results
 print(benchmark_result)
@@ -65,7 +66,7 @@ ggplot(plot_data, aes(x = method, y = time)) +
   #geom_boxplot(alpha = 0.5) +
   geom_point(position = position_jitter(width = 0.2), alpha = 0.9) +
   labs(title = paste0("Benchmark: dplyr vs DuckDB vs duckplyr (", trials, " trials)"),
-       subtitle = "Counting distinct IDs in 80 million observations / 3.9 GB csv.",
+       subtitle = "Calculating yearly temperature averages in 80 million observations / 3.9 GB csv.",
        x = "Method", 
        y = "Time (milliseconds)") +
   scale_x_discrete(labels = method_labels) +
@@ -76,3 +77,12 @@ ggplot(plot_data, aes(x = method, y = time)) +
 dbDisconnect(con, shutdown = TRUE)
 
 print(benchmark_result)
+
+data |>
+  summarise(
+    mean_temp = mean(mean_temp_k),
+    year,
+    group_by(data, year)
+  ) |>
+  arrange(desc(year))
+

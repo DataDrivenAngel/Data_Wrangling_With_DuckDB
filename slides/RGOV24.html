@@ -344,7 +344,7 @@ Will Angel
 <li class="fragment">DuckDB is a <em>very</em> fast in-process SQL database</li>
 <li class="fragment">Duckplyr is a package for using Dplyer on DuckDB</li>
 <li class="fragment">You can use Duckplyr as a <em>drop in replacement to get a 2-30x speedup for dplyr code on large datasets</em></li>
-<li class="fragment">Big data is smaller than it used to be</li>
+<li class="fragment">Big data is smaller than it used to be.</li>
 </ol>
 </section>
 <section id="agenda" class="slide level2">
@@ -356,7 +356,7 @@ Will Angel
 <li class="fragment">How can you use DuckDB</li>
 <li class="fragment">What is Duckplyr</li>
 <li class="fragment">Data processing performance and profiling</li>
-<li class="fragment">A brief tangent on the shrinking of big data</li>
+<li class="fragment">A brief tangent on the shrinking of big data.</li>
 </ul>
 </section>
 <section>
@@ -369,9 +369,9 @@ Will Angel
 <p>DuckDB is an open source fast in-process analytical database!</p>
 <ul>
 <li class="fragment">Open Source: Free &amp; Open</li>
-<li class="fragment">Fast: Performant. <strong>Quickly and efficiently runs analytical SQL queries</strong>. Speed means cheaper if you’re doing cloud processing.</li>
-<li class="fragment">In-process: <strong>Runs locally</strong> without a server, like SQLite.</li>
-<li class="fragment">Analytical: DuckDB is optimized for <strong>fast aggregations</strong> and analytical queries to support online analytical processing (OLAP). DuckDB supports ACID transactions, but is not as fast for online transaction processing (OLTP) workloads.</li>
+<li class="fragment">Fast: Performant. <strong>Quickly and efficiently runs analytical SQL queries</strong>: Speed means cheaper if you’re doing cloud processing</li>
+<li class="fragment">In-process: <strong>Runs locally</strong> without a server, like SQLite</li>
+<li class="fragment">Analytical: DuckDB is optimized for <strong>fast aggregations</strong> and analytical queries to support online analytical processing (OLAP). DuckDB supports ACID transactions, but is not as fast for online transaction processing (OLTP) workloads</li>
 <li class="fragment">Database: DuckDB can be used to efficiently store relational data.</li>
 </ul>
 </section>
@@ -385,7 +385,7 @@ Will Angel
 <section id="why-you-should-care-more-technical" class="slide level2">
 <h2>Why you should care (more technical)</h2>
 <ul>
-<li class="fragment">DuckDB is like SQLite but for data processing. You can crunch significant amounts of data locally without spinning up a full database / data warehouse server, which may create significant time/cost savings and simplify system design.</li>
+<li class="fragment">DuckDB is like SQLite but for data processing. You can crunch significant amounts of data locally without spinning up a full database / data warehouse server, which may create significant time/cost savings and simplify system design</li>
 <li class="fragment">DuckDB is versatile and fast for data processing. Competitive with spark/polars in benchmarks</li>
 <li class="fragment">DuckDB is portable with zero dependencies.</li>
 </ul>
@@ -395,7 +395,7 @@ Will Angel
 <ul>
 <li class="fragment">You should use DuckDB for SQL data processing!</li>
 <li class="fragment">You have medium-largish data</li>
-<li class="fragment">You don’t want the hassle of procuring larger computing resources</li>
+<li class="fragment">You don’t want the hassle of procuring larger computing resources.</li>
 </ul>
 </section>
 <section id="how-can-you-use-duckdb" class="slide level2">
@@ -410,7 +410,7 @@ Will Angel
 <h2>What is Duckplyr</h2>
 <ul>
 <li class="fragment"><p>Duckplyr is a drop in replacement for Dplyr!</p></li>
-<li class="fragment"><p>Duckplyr uses DuckDB’s “relational” API to skip the SQL and directly construct logical query plans.</p></li>
+<li class="fragment"><p>Duckplyr uses DuckDB’s “relational” API to skip the SQL and directly construct logical query plans</p></li>
 <li class="fragment"><p>This means you can speed up your Dplyr code by ~2-30x by simply changing the package!</p></li>
 <li class="fragment"><p>Unsupported operations will fall back to Dplyr, so your code will always run!</p></li>
 <li class="fragment"><p>Duckplyr <em>overwrites</em> Dplyr methods, so it only takes loading the package.</p>
@@ -423,11 +423,11 @@ Will Angel
 <li class="fragment">Unsupported operations will fall back to Dplyr, so your code will always run!
 <ul>
 <li class="fragment">This may mean you don’t get a performance increase</li>
-<li class="fragment">If you’re doing out of memory processing this may also cause issues.</li>
+<li class="fragment">If you’re doing out of memory processing this may also cause issues</li>
 </ul></li>
 <li class="fragment">Duckplyr is still under active development, so there are some surprising unsupported operations:
 <ul>
-<li class="fragment">“message”:“No relational implementation for group_by()”</li>
+<li class="fragment">“message”:“No relational implementation for group_by().”</li>
 </ul></li>
 </ul>
 </section>

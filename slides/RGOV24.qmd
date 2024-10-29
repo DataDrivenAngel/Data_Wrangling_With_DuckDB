@@ -80,7 +80,7 @@ DuckDB is an open source fast in-process analytical database!
   
 
 
-#  Data processing performance and profiling
+# Benchmarking & Speed
 
 
 

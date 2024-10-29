@@ -186,10 +186,11 @@ With more access to cheaper computing power and better tools (DuckDB/Polars(Tidy
 ## Thank you!
 
 :::{.nonincremental layout-ncol=2}
+- [/in/william-angel/](https://www.linkedin.com/in/william-angel/)
 - [@datadrivenangel](https://www.x.com/datadrivenangel)
 - [www.williamangel.net](https://www.williamangel.net)
 - [yt@williamangel.net](mailto:yt@williamangel.net)
-- [/in/william-angel/](https://www.linkedin.com/in/william-angel/)
+
 
 ![](images/ai_ducks.png)
 *AI ducks taking a bow: Flux-schnell Image Generation model.*

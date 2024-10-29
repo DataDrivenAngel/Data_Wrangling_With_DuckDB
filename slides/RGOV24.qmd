@@ -38,9 +38,9 @@ editor: visual
 DuckDB is an open source fast in-process analytical database!
 
 * Open Source: Free & Open
-* Fast: Performant. **Quickly and efficiently runs analytical SQL queries**: Speed means cheaper if you're doing cloud processing
-* In-process: **Runs locally** without a server, like SQLite
-* Analytical: DuckDB is optimized for **fast aggregations** and analytical queries to support online analytical processing (OLAP). DuckDB supports ACID transactions, but is not as fast for online transaction processing (OLTP) workloads
+* Fast: Performant. **Quickly and efficiently runs analytical SQL queries**
+* In-process: **Runs locally** without a server
+* Analytical: DuckDB is optimized for **aggregations** and analytical queries to support online analytical processing (OLAP). DuckDB supports ACID transactions, but is not as fast for online transaction processing (OLTP) workloads
 * Database: DuckDB can be used to efficiently store relational data.
 
 
@@ -59,7 +59,7 @@ DuckDB is an open source fast in-process analytical database!
 * You don't want the hassle of procuring larger computing resources.
 
 ##  How can you use DuckDB
-* Directly use the DuckDB package.
+* Directly use the DuckDB package
 * use DBplyr to connect to a local DuckDB database
 * use Duckplyr!
 

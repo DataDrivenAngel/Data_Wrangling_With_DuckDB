@@ -44,11 +44,11 @@ DuckDB is an open source fast in-process analytical database!
 * Database: DuckDB can be used to efficiently store relational data.
 
 
-## Why you should care!
+## Why should you care?
 * DuckDB is a great tool for local SQL analysis. Import a file and you can do SQL locally!
 * DuckDB is starting to power the next generation of embedded analytical tools, so expect browser based data filtering tools to get more powerful.
 
-## Why you should care (more technical)
+## Why should you care (more technical)
 * DuckDB is like SQLite but for data processing. You can crunch significant amounts of data locally without spinning up a full database / data warehouse server, which may create significant time/cost savings and simplify system design
 * DuckDB is versatile and fast for data processing. Competitive with spark/polars in benchmarks
 * DuckDB is portable with zero dependencies.

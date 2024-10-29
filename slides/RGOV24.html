@@ -12,7 +12,7 @@
 
   <meta name="author" content="Will Angel">
   <meta name="dcterms.date" content="2024-10-29">
-  <title>Wrangling Data with DuckDB</title>
+  <title>Wrangling Data with DuckDB 🦆</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
@@ -326,7 +326,7 @@
     <div class="slides">
 
 <section id="title-slide" class="quarto-title-block center">
-  <h1 class="title">Wrangling Data with DuckDB</h1>
+  <h1 class="title">Wrangling Data with DuckDB 🦆</h1>
 
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
@@ -341,9 +341,10 @@ Will Angel
 <section id="key-takeaways" class="slide level2">
 <h2>Key Takeaways</h2>
 <ol type="1">
-<li class="fragment">DuckDB is a <em>very</em> fast in-process database.</li>
+<li class="fragment">DuckDB is a <em>very</em> fast in-process SQL database</li>
 <li class="fragment">Duckplyr is a package for using Dplyer on DuckDB</li>
-<li class="fragment">You can use Duckplyr as a <em>drop in replacement to get a 10-20x speedup for dplyr code on large datasets</em></li>
+<li class="fragment">You can use Duckplyr as a <em>drop in replacement to get a 2-30x speedup for dplyr code on large datasets</em></li>
+<li class="fragment">Big data is smaller than it used to be</li>
 </ol>
 </section>
 <section id="agenda" class="slide level2">
@@ -377,7 +378,7 @@ Will Angel
 <h2>Why you should care!</h2>
 <ul>
 <li class="fragment">DuckDB is a great tool for local SQL analysis. Import a file and you can do SQL locally!</li>
-<li class="fragment">DuckDB is starting to power the next generation of embedding analytical tools, so expect browser based data filtering tools to get more powerful.</li>
+<li class="fragment">DuckDB is starting to power the next generation of embedded analytical tools, so expect browser based data filtering tools to get more powerful.</li>
 </ul>
 </section>
 <section id="why-you-should-care-more-technical" class="slide level2">
@@ -391,8 +392,8 @@ Will Angel
 <section id="when-should-you-use-duckdb" class="slide level2">
 <h2>When should you use DuckDB</h2>
 <ul>
-<li class="fragment">You should use DuckDB for data processing!</li>
-<li class="fragment">You have medium largish data</li>
+<li class="fragment">You should use DuckDB for SQL data processing!</li>
+<li class="fragment">You have medium-largish data</li>
 <li class="fragment">You don’t want the hassle of procuring larger computing resources</li>
 </ul>
 </section>
@@ -407,13 +408,27 @@ Will Angel
 <section id="what-is-duckplyr" class="slide level2">
 <h2>What is Duckplyr</h2>
 <ul>
-<li class="fragment">Duckplyr is a drop in replacement for Dplyr!</li>
-<li class="fragment">Duckplyr uses DuckDB’s “relational” API to skip the SQL and directly construct logical query plans.</li>
-<li class="fragment">This means you can speed up your Dplyr code by ~10-20x by simply changing the package!</li>
-<li class="fragment">Out of memory processing!</li>
-<li class="fragment">Unsupported operations will fall back to Dplyr, so your code will always run!</li>
+<li class="fragment"><p>Duckplyr is a drop in replacement for Dplyr!</p></li>
+<li class="fragment"><p>Duckplyr uses DuckDB’s “relational” API to skip the SQL and directly construct logical query plans.</p></li>
+<li class="fragment"><p>This means you can speed up your Dplyr code by ~2-30x by simply changing the package!</p></li>
+<li class="fragment"><p>Unsupported operations will fall back to Dplyr, so your code will always run!</p></li>
+<li class="fragment"><p>Duckplyr <em>overwrites</em> Dplyr methods, so it only takes loading the package.</p>
+<pre><code>library("duckplyr")</code></pre></li>
 </ul>
-<pre><code>install.packages("duckplyr")</code></pre>
+</section>
+<section id="duckplyr-caveats" class="slide level2">
+<h2>Duckplyr Caveats</h2>
+<ul>
+<li class="fragment">Unsupported operations will fall back to Dplyr, so your code will always run!
+<ul>
+<li class="fragment">This may mean you don’t get a performance increase</li>
+<li class="fragment">If you’re doing out of memory processing this may also cause issues.</li>
+</ul></li>
+<li class="fragment">Duckplyr is still under active development, so there are some surprising unsupported operations:
+<ul>
+<li class="fragment">“message”:“No relational implementation for group_by()”</li>
+</ul></li>
+</ul>
 </section>
 <section id="data-processing-performance-and-profiling" class="slide level2">
 <h2>Data processing performance and profiling</h2>
@@ -421,49 +436,113 @@ Will Angel
 <li class="fragment">DuckDB:
 <ul>
 <li class="fragment">versus dplyr</li>
-<li class="fragment">versus dbplyr</li>
-<li class="fragment">versus data.frame</li>
-<li class="fragment">versus tibbles</li>
-<li class="fragment">versus data.table</li>
-<li class="fragment">versus polars</li>
+<li class="fragment">versus data.table0</li>
 </ul></li>
 </ul>
 </section>
 <section id="dplyr-versus-duckplyr" class="slide level2">
 <h2>Dplyr versus Duckplyr</h2>
-<p>To compare Dplyr and Duckplyr performance, we’ll look at the Global Lake area, Climate, and Population Dataset (GLCP). This includes almost 80 million records of temperature data for lakes, for a 3.9GB Csv file.</p>
+<p>To compare Dplyr and Duckplyr performance, we’ll look at the Global Lake area, Climate, and Population Dataset (GLCP). This includes almost 80 million records of temperature data for lakes, for a 3.9GB CSV file.</p>
 <p>Dplyr:</p>
-<pre><code>data %&gt;%
-  distinct(HYBAS_ID) %&gt;%
+<pre><code>data |&gt;
+  distinct(HYBAS_ID) |&gt;
   nrow()</code></pre>
 <p>Duckplyr:</p>
-<pre><code>data %&gt;%
-  duckplyr::as_duckplyr_tibble() %&gt;%
-  distinct(HYBAS_ID) %&gt;%
+<pre><code>data |&gt;
+  duckplyr::as_duckplyr_tibble() |&gt;
+  distinct(HYBAS_ID) |&gt;
   nrow()</code></pre>
 </section>
-<section id="dply" class="slide level2">
-<h2>dply</h2>
-<pre><code>benchmark_result &lt;- microbenchmark(
-  dplyr = {
-    data %&gt;%
-      distinct(HYBAS_ID) %&gt;%
-      nrow()
-  },
-  duckdb = {
-    dbGetQuery(con, "SELECT COUNT(DISTINCT HYBAS_ID) FROM data")[[1]]
-  },
-  duckplyr = {
-    data %&gt;%
-      duckplyr::as_duckplyr_tibble() %&gt;%
-      distinct(HYBAS_ID) %&gt;%
-      nrow()
-  },
-  times = trials
-)</code></pre>
-</section>
-<section class="slide level2">
+<section id="dplyr-versus-duckplyr-1" class="slide level2">
+<h2>Dplyr Versus Duckplyr</h2>
 
+<img data-src="images/benchmark_dplyr_duckplyr25.png" class="r-stretch quarto-figure-center"><p class="caption">86% speed increase counting distinct IDs in 80 million rows</p></section>
+<section id="dplyr-versus-duckplyr-2" class="slide level2">
+<h2>Dplyr Versus Duckplyr</h2>
+<p>Now we’ll take a look at the overall GLCP dataset, 30 million observations in a 5.5GB CSV file.</p>
+<pre><code>    data |&gt;
+      summarise(
+        avg_size = mean(total_km2), n = n(), .by = country)
+        </code></pre>
+<pre><code>    library(duckplyr)
+    
+    data |&gt;
+      summarise(
+        avg_size = mean(total_km2), n = n(), .by = country)</code></pre>
+</section>
+<section id="dplyr-versus-duckplyr-3" class="slide level2">
+<h2>Dplyr Versus Duckplyr</h2>
+
+<img data-src="images/failplot.png" class="r-stretch quarto-figure-center"><p class="caption">We ran into a limitation of Duckplyr and fell back to dplyr. 😢 “{”version”:“0.4.1”,“message”:“No relational implementation for group_by()”}”</p></section>
+<section id="dplyr-versus-duckplyr-duckdb" class="slide level2">
+<h2>Dplyr Versus <del>Duckplyr</del> DuckDB</h2>
+<p>Let’s switch to DuckDB and write some SQL:</p>
+<pre><code>library(duckdb)
+
+con &lt;- dbConnect(duckdb())
+duckdb_register(con, "data", data)
+
+
+dbGetQuery(con, "
+      SELECT 
+        country,
+        AVG(total_km2) as avg_size,
+        COUNT(*) as n
+      FROM data 
+      GROUP BY country
+    ")</code></pre>
+</section>
+<section id="dplyr-versus-duckplyr-duckdb-1" class="slide level2">
+<h2>Dplyr Versus <del>Duckplyr</del> DuckDB</h2>
+
+<img data-src="images/winplot.png" class="r-stretch quarto-figure-center"><p class="caption">And now we can get results much faster</p></section></section>
+<section>
+<section id="big-data-is-smaller-than-it-used-to-be" class="title-slide slide level1 center">
+<h1>Big Data is smaller than it used to be</h1>
+
+</section>
+<section id="computers-are-getting-bigger" class="slide level2">
+<h2>Computers are getting bigger</h2>
+
+<img data-src="images/MemoryDiskPriceGraph-2024Jul.jpg" class="r-stretch quarto-figure-center"><p class="caption">https://jcmit.net/memoryprice.htm</p></section>
+<section id="computers-are-getting-bigger-1" class="slide level2">
+<h2>Computers are getting bigger</h2>
+
+<img data-src="images/MemoryDiskPriceGraph-2024Jul2.jpg" class="r-stretch quarto-figure-center"><p class="caption">https://jcmit.net/memoryprice.htm</p></section>
+<section id="memory-has-gotten-significantly-cheaper" class="slide level2">
+<h2>Memory has gotten significantly cheaper</h2>
+
+<img data-src="images/MemoryPrices.png" class="r-stretch quarto-figure-center"><p class="caption">https://jcmit.net/memoryprice.htm</p></section>
+<section id="memory-has-gotten-significantly-cheaper-1" class="slide level2">
+<h2>Memory has gotten significantly cheaper</h2>
+
+<img data-src="images/MemoryPrices2.png" class="r-stretch quarto-figure-center"><p class="caption">https://jcmit.net/memoryprice.htm</p></section>
+<section id="in-conclusion" class="slide level2">
+<h2>In Conclusion:</h2>
+<h4 id="big-data-is-smaller-than-it-used-to-be-1">Big data is smaller than it used to be</h4>
+<p>With more access to cheaper computing power and better tools (DuckDB/Polars(TidyPolars)/Data.Table) that allow us to process data more efficiently:</p>
+<ol type="1">
+<li class="fragment">We’ll end up with more “Annoyingly Medium Data” - Too big to open in Excel, fits in RAM on a decent laptop</li>
+<li class="fragment">We can defer investing in large scale distributed systems like Spark more often, and wait longer to ditch our dplyr code.</li>
+</ol>
+</section>
+<section id="thank-you" class="slide level2">
+<h2>Thank you!</h2>
+<div class="quarto-layout-panel">
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: center;">
+<ul>
+<li><a href="https://www.x.com/datadrivenangel"><span class="citation" data-cites="datadrivenangel">@datadrivenangel</span></a></li>
+<li><a href="https://www.williamangel.net">www.williamangel.net</a></li>
+<li><a href="mailto:yt@williamangel.net">yt@williamangel.net</a></li>
+<li><a href="https://www.linkedin.com/in/william-angel/">/in/william-angel/</a></li>
+</ul>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: center;">
+<p><img data-src="images/ai_ducks.png"> <em>AI ducks taking a bow: Flux-schnell Image Generation model.</em></p>
+</div>
+</div>
+</div>
 <div class="footer footer-default">
 
 </div>

@@ -14,8 +14,8 @@ trials = 25
 data <- read_csv(file_path)
 
 # Create a DuckDB connection and table
-con <- dbConnect(duckdb())
-duckdb_register(con, "data", data)
+#con <- dbConnect(duckdb())
+#duckdb_register(con, "data", data)
 
 # Benchmark the distinct function for dplyr, DuckDB, and duckplyr
 benchmark_result <- microbenchmark(
@@ -24,9 +24,9 @@ benchmark_result <- microbenchmark(
       distinct(HYBAS_ID) %>%
       nrow()
   },
-  duckdb = {
-    dbGetQuery(con, "SELECT COUNT(DISTINCT HYBAS_ID) FROM data")[[1]]
-  },
+#  duckdb = {
+#    dbGetQuery(con, "SELECT COUNT(DISTINCT HYBAS_ID) FROM data")[[1]]
+#  },
   duckplyr = {
     data %>%
       duckplyr::as_duckplyr_tibble() %>%
@@ -62,10 +62,10 @@ names(method_labels) <- mean_times$method
 
 # Create a ggplot
 ggplot(plot_data, aes(x = method, y = time)) +
-  #geom_boxplot(alpha = 0.5) +
+  geom_boxplot(alpha = 0.5, outliers =  FALSE) +
   geom_point(position = position_jitter(width = 0.2), alpha = 0.9) +
-  labs(title = paste0("Benchmark: dplyr vs DuckDB vs duckplyr (", trials, " trials)"),
-       subtitle = "Counting distinct IDs in 80 million observations / 3.9 GB csv.",
+  labs(title = paste0("Benchmark: dplyr vs duckplyr (", trials, " trials)"),
+       subtitle = "Counting distinct IDs in 80 million observations / a 3.9 GB csv.",
        x = "Method", 
        y = "Time (milliseconds)") +
   scale_x_discrete(labels = method_labels) +
@@ -73,7 +73,7 @@ ggplot(plot_data, aes(x = method, y = time)) +
   theme_minimal()
 
 # Close the DuckDB connection
-dbDisconnect(con, shutdown = TRUE)
+#dbDisconnect(con, shutdown = TRUE)
 
 print(benchmark_result)
 

@@ -1,5 +1,5 @@
 ---
-title: "Wrangling Data with DuckDB"
+title: "Wrangling Data with DuckDB 🦆"
 author: "Will Angel"
 date: "2024-10-29"
 location: "RGOV24"
@@ -13,9 +13,10 @@ editor: visual
 
 
 ## Key Takeaways
-1. DuckDB is a *very* fast in-process database.
+1. DuckDB is a *very* fast in-process SQL database
 2. Duckplyr is a package for using Dplyer on DuckDB
-3. You can use Duckplyr as a *drop in replacement to get a 10-20x speedup for dplyr code on large datasets*
+3. You can use Duckplyr as a *drop in replacement to get a 2-30x speedup for dplyr code on large datasets*
+4. Big data is smaller than it used to be
 
 ## Agenda
 * What is DuckDB
@@ -41,7 +42,7 @@ DuckDB is an open source fast in-process analytical database!
 
 ## Why you should care!
 * DuckDB is a great tool for local SQL analysis. Import a file and you can do SQL locally!
-* DuckDB is starting to power the next generation of embedding analytical tools, so expect browser based data filtering tools to get more powerful. 
+* DuckDB is starting to power the next generation of embedded analytical tools, so expect browser based data filtering tools to get more powerful. 
 
 ## Why you should care (more technical)
 * DuckDB is like SQLite but for data processing. You can crunch significant amounts of data locally without spinning up a full database / data warehouse server, which may create significant time/cost savings and simplify system design.
@@ -49,8 +50,8 @@ DuckDB is an open source fast in-process analytical database!
 * DuckDB is portable with zero dependencies.
 
 ##  When should you use DuckDB
-* You should use DuckDB for data processing!
-* You have medium largish data
+* You should use DuckDB for SQL data processing!
+* You have medium-largish data
 * You don't want the hassle of procuring larger computing resources
 
 ##  How can you use DuckDB
@@ -62,72 +63,139 @@ DuckDB is an open source fast in-process analytical database!
 ## What is Duckplyr
 * Duckplyr is a drop in replacement for Dplyr!
 * Duckplyr uses DuckDB’s “relational” API to skip the SQL and directly construct logical query plans.
-* This means you can speed up your Dplyr code by ~10-20x by simply changing the package! 
-* Out of memory processing!
+* This means you can speed up your Dplyr code by ~2-30x by simply changing the package! 
 * Unsupported operations will fall back to Dplyr, so your code will always run!
+* Duckplyr *overwrites* Dplyr methods, so it only takes loading the package.
+  ```
+  library("duckplyr")
+  ```
 
-```
-install.packages("duckplyr")
-```
+## Duckplyr Caveats
+* Unsupported operations will fall back to Dplyr, so your code will always run!
+  * This may mean you don't get a performance increase
+  * If you're doing out of memory processing this may also cause issues.
+* Duckplyr is still under active development, so there are some surprising unsupported operations:
+  * "message":"No relational implementation for group_by()"
+  
+
 
 ##  Data processing performance and profiling
 
 * DuckDB:
 	* versus dplyr
-	* versus dbplyr
-	* versus data.frame
-	* versus tibbles
-	* versus data.table
-	* versus polars
+	* versus data.table0
 
 ## Dplyr versus Duckplyr
 
-To compare Dplyr and Duckplyr performance, we'll look at the Global Lake area, Climate, and Population Dataset (GLCP). This includes almost 80 million records of temperature data for lakes, for a 3.9GB Csv file. 
+To compare Dplyr and Duckplyr performance, we'll look at the Global Lake area, Climate, and Population Dataset (GLCP). This includes almost 80 million records of temperature data for lakes, for a 3.9GB CSV file. 
 
 Dplyr:
 ```
-data %>%
-  distinct(HYBAS_ID) %>%
+data |>
+  distinct(HYBAS_ID) |>
   nrow()
 ```
 
 Duckplyr:
 ```
-data %>%
-  duckplyr::as_duckplyr_tibble() %>%
-  distinct(HYBAS_ID) %>%
+data |>
+  duckplyr::as_duckplyr_tibble() |>
+  distinct(HYBAS_ID) |>
   nrow()
 ```
 
+## Dplyr Versus Duckplyr
 
+![86% speed increase counting distinct IDs in 80 million rows](images/benchmark_dplyr_duckplyr25.png)
 
+## Dplyr Versus Duckplyr
 
-
-## dply
+Now we'll take a look at the overall GLCP dataset, 30 million observations in a 5.5GB CSV file.
 
 ```
-benchmark_result <- microbenchmark(
-  dplyr = {
-    data %>%
-      distinct(HYBAS_ID) %>%
-      nrow()
-  },
-  duckdb = {
-    dbGetQuery(con, "SELECT COUNT(DISTINCT HYBAS_ID) FROM data")[[1]]
-  },
-  duckplyr = {
-    data %>%
-      duckplyr::as_duckplyr_tibble() %>%
-      distinct(HYBAS_ID) %>%
-      nrow()
-  },
-  times = trials
-)
+    data |>
+      summarise(
+        avg_size = mean(total_km2), n = n(), .by = country)
+        
 ```
+
+
+```
+    library(duckplyr)
+    
+    data |>
+      summarise(
+        avg_size = mean(total_km2), n = n(), .by = country)
+```
+## Dplyr Versus Duckplyr
+
+![We ran into a limitation of Duckplyr and fell back to dplyr. 😢 "{"version":"0.4.1","message":"No relational implementation for group_by()"}"](images/failplot.png)
+
+
+## Dplyr Versus ~~Duckplyr~~ DuckDB
+
+Let's switch to DuckDB and write some SQL:
+```
+library(duckdb)
+
+con <- dbConnect(duckdb())
+duckdb_register(con, "data", data)
+
+
+dbGetQuery(con, "
+      SELECT 
+        country,
+        AVG(total_km2) as avg_size,
+        COUNT(*) as n
+      FROM data 
+      GROUP BY country
+    ")
+```
+## Dplyr Versus ~~Duckplyr~~ DuckDB
+![And now we can get results much faster](images/winplot.png)
+
+
+# Big Data is smaller than it used to be
+
+## Computers are getting bigger
+
+
+![https://jcmit.net/memoryprice.htm](images/MemoryDiskPriceGraph-2024Jul.jpg)
+
+## Computers are getting bigger
+
+![https://jcmit.net/memoryprice.htm](images/MemoryDiskPriceGraph-2024Jul2.jpg)
+
+## Memory has gotten significantly cheaper
+
+![https://jcmit.net/memoryprice.htm](images/MemoryPrices.png)
+
+## Memory has gotten significantly cheaper
+
+![https://jcmit.net/memoryprice.htm](images/MemoryPrices2.png)
+
+## In Conclusion: 
+#### Big data is smaller than it used to be
+
+
+With more access to cheaper computing power and better tools (DuckDB/Polars(TidyPolars)/Data.Table) that allow us to process data more efficiently:
+
+1. We'll end up with more "Annoyingly Medium Data" - Too big to open in Excel, fits in RAM on a decent laptop
+2. We can defer investing in large scale distributed systems like Spark more often, and wait longer to ditch our dplyr code. 
+
+## Thank you!
+
+:::{.nonincremental layout-ncol=2}
+- [@datadrivenangel](https://www.x.com/datadrivenangel)
+- [www.williamangel.net](https://www.williamangel.net)
+- [yt@williamangel.net](mailto:yt@williamangel.net)
+- [/in/william-angel/](https://www.linkedin.com/in/william-angel/)
+
+![](images/ai_ducks.png)
+*AI ducks taking a bow: Flux-schnell Image Generation model.*
+:::
+
+
 
 ---
-
-
-
-
-
+---

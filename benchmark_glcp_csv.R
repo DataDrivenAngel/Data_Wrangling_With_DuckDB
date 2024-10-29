@@ -4,10 +4,11 @@ library(dplyr)
 library(microbenchmark)
 library(duckdb)
 library(ggplot2)
+library(data.table)
 
 # Specify the path to the CSV file
-file_path <- "data/average_temp.csv"
-trials = 5
+file_path <- "data/glcp.csv"
+trials = 50
 
 # Read the entire CSV file
 data <- read_csv(file_path)
@@ -16,44 +17,61 @@ data <- read_csv(file_path)
 con <- dbConnect(duckdb())
 duckdb_register(con, "data", data)
 
+# Convert to data.table
+dt <- as.data.table(data)
+
 # First benchmark dplyr
 dplyr_benchmark <- microbenchmark(
   dplyr = {
     data |>
-      group_by(year) |>
       summarise(
-        mean_temp = mean(mean_temp_k, na.rm = TRUE), n = n()
-      ) |> arrange(year)
+        .by = country,
+        avg_size = mean(total_km2)
+        , n = n()
+      )
   },
   times = trials
 )
 
+# Benchmark DuckDB
+duckdb_benchmark <- microbenchmark(
+  duckdb = {
+    dbGetQuery(con, "
+      SELECT 
+        country,
+        AVG(total_km2) as avg_size,
+        COUNT(*) as n
+      FROM data 
+      GROUP BY country
+    ")
+  },
+  times = trials
+)
 
 library(duckplyr)
 # Then benchmark duckplyr
 duckplyr_benchmark <- microbenchmark(
   duckplyr = {
-      data |>
-      #duckplyr::as_duckplyr_tibble() |>
-      group_by(year) |>
+    data |>  duckplyr::as_duckplyr_tibble() |>
       summarise(
-        mean_temp = mean(mean_temp_k, na.rm = TRUE), n = n()
-      ) |> arrange(year)
+        .by = country,
+        avg_size = mean(total_km2)
+        , n = n()
+      )
+  },
+  times = trials
+)
+
+# Benchmark data.table
+datatable_benchmark <- microbenchmark(
+  data.table = {
+    dt[, .(avg_size = mean(total_km2), n = .N), by = country]
   },
   times = trials
 )
 
 # Combine the benchmark results
-benchmark_result <- rbind(dplyr_benchmark, duckplyr_benchmark)
-
-# Calculate yearly averages using dplyr for verification
-yearly_averages <- data %>%
-  group_by(year) %>%
-  summarise(avg_temp = mean(mean_temp_k, na.rm = TRUE))
-
-# Print the yearly averages
-print("Yearly Average Temperatures:")
-print(yearly_averages)
+benchmark_result <- rbind(dplyr_benchmark, duckdb_benchmark, duckplyr_benchmark, datatable_benchmark)
 
 # Print the benchmark results
 print(benchmark_result)
@@ -63,7 +81,6 @@ plot_data <- data.frame(
   method = benchmark_result$expr,
   time = benchmark_result$time / 1e6  # Convert to milliseconds
 )
-
 # Calculate mean times per method
 mean_times <- aggregate(time ~ method, plot_data, mean)
 
@@ -72,11 +89,11 @@ method_labels <- paste0(mean_times$method, "\n(mean: ", round(mean_times$time, 2
 names(method_labels) <- mean_times$method
 
 # Create a ggplot
-ggplot(plot_data, aes(x = method, y = time)) +
+ggplot(plot_data, aes(x = factor(method, levels = c("dplyr", "duckplyr", "duckdb", "data.table")), y = time)) +
   #geom_boxplot(alpha = 0.5) +
   geom_point(position = position_jitter(width = 0.2), alpha = 0.9) +
-  labs(title = paste0("Benchmark: dplyr vs DuckDB vs duckplyr (", trials, " trials)"),
-       subtitle = "Calculating yearly temperature averages in 80 million observations / 3.9 GB csv.",
+  labs(title = paste0("Benchmark: dplyr vs duckplyr(fallback) vs DuckDB vs data.table (", trials, " trials)"),
+       subtitle = "Calculating yearly temperature averages for 30 million observations / 5.5 GB csv.",
        x = "Method", 
        y = "Time (milliseconds)") +
   scale_x_discrete(labels = method_labels) +

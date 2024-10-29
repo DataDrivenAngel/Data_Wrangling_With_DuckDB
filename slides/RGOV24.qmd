@@ -19,12 +19,13 @@ editor: visual
 4. Big data is smaller than it used to be
 
 ## Agenda
-* What is DuckDB
+* What is DuckDB 
 * Why should you care about DuckDB
 * When should you use DuckDB
 * How can you use DuckDB
 * What is Duckplyr
 * Data processing performance and profiling
+* A brief tangent on the shrinking of big data
 
 
 # DuckDB?
@@ -79,11 +80,9 @@ DuckDB is an open source fast in-process analytical database!
   
 
 
-##  Data processing performance and profiling
+#  Data processing performance and profiling
 
-* DuckDB:
-	* versus dplyr
-	* versus data.table0
+
 
 ## Dplyr versus Duckplyr
 

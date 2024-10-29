@@ -12,7 +12,8 @@ editor: visual
 ---
 
 
-## Key Takeaways
+## Key Takeaways 
+
 1. DuckDB is a *very* fast in-process SQL database
 2. Duckplyr is a package for using Dplyer on DuckDB
 3. You can use Duckplyr as a *drop in replacement to get a 2-30x speedup for dplyr code on large datasets*
@@ -28,7 +29,9 @@ editor: visual
 * A brief tangent on the shrinking of big data
 
 
-# DuckDB?
+# DuckDB
+![](images/DuckDB.png)
+
 
 ## What is DuckDB? {.smaller}
 
@@ -80,9 +83,8 @@ DuckDB is an open source fast in-process analytical database!
   
 
 
-# Benchmarking & Speed
-
-
+## Benchmarking & Speed 
+![](images/duckplyr.png)
 
 ## Dplyr versus Duckplyr
 

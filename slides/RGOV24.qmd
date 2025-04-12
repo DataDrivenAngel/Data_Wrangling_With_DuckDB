@@ -4,9 +4,8 @@ author: "Will Angel"
 date: "2024-10-29"
 location: "RGOV24"
 format:
-  revealjs: 
+  pdf: 
     theme: blood
-incremental: true
 
 editor: visual
 ---

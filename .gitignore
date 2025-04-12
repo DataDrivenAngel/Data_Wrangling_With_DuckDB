@@ -55,3 +55,6 @@ rsconnect/
 *.dta
 *.sav
 *.por
+slides/.DS_Store
+.DS_Store
+slides/.DS_Store

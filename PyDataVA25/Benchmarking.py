@@ -9,6 +9,9 @@ import random
 import string
 from tqdm import tqdm
 import polars as pl
+import seaborn as sns
+import matplotlib.pyplot as plt
+from datetime import datetime
 
 def generate_random_string(length):
     """Generate a random string of specified length."""
@@ -106,14 +109,16 @@ def benchmark_duckdb_filter(csv_file):
     start_time = time.time()
     con = duckdb.connect()
     result = con.execute(f"""
-        WITH stats AS (
-            SELECT 
-                AVG(numeric1) as avg_numeric1,
-                PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY numeric2) as median_numeric2
-            FROM read_csv_auto('{csv_file}')
-        )
+        WITH data as (
         SELECT *
-        FROM read_csv_auto('{csv_file}'), stats
+        FROM read_csv_auto('{csv_file}'))
+
+        , STATS as (
+            FROM data SELECT
+            AVG(numeric1) as avg_numeric1
+            , PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY numeric2) as median_numeric2
+        )
+        select * from data, stats
         WHERE numeric1 > avg_numeric1
         AND numeric2 < median_numeric2
         AND category IN ('A', 'B')
@@ -165,6 +170,53 @@ def store_benchmark_result(conn, file_size, file_size_mb, operation, tool, execu
         VALUES (?, ?, ?, ?, ?)
     ''', (file_size, file_size_mb, operation, tool, execution_time))
     conn.commit()
+
+
+def generate_benchmark_image():
+    duckdb.sql("INSTALL sqlite; LOAD sqlite;")
+    duckdb.sql("Create table if not exists benchmarks as select * from sqlite_scan('benchmark_results.db','benchmark_results')")
+    df = duckdb.sql(""" 
+    FROM benchmarks
+    SELECT 
+    tool
+    , file_size
+    , regexp_replace(operation, '\d+$', '') as operation      -- remove trailing integers
+    , execution_time
+    where date_trunc('day',  timestamp) = '2025-04-19'
+
+    """).to_df()
+
+    # Create the lmplot with legend positioned at the upper middle left
+    g = sns.lmplot(x='file_size', y='execution_time', data=df, hue='tool', 
+                height=6, aspect=10/6,
+                legend_out=False)  # Keep legend inside the plot
+
+    # Get the figure and axes from the FacetGrid
+    fig = g.fig
+    ax = g.axes[0, 0]  # The first (and only) subplot
+
+    # Set x-axis to log scale
+    ax.set_xscale('log')
+
+    # Add title and labels
+    ax.set_title('Execution Time Distribution by Tool', fontsize=16)
+    ax.set_xlabel('File Size (rows)', fontsize=14)
+    ax.set_ylabel('Execution Time (seconds)', fontsize=14)
+
+    # Add grid for better readability
+    ax.grid(axis='y', linestyle='--', alpha=0.7)
+
+    # Update the legend position
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles, labels, loc='upper left', bbox_to_anchor=(0.6, .65))
+
+    # Improve aesthetics
+    sns.despine(left=False, bottom=False, ax=ax)
+    plt.tight_layout()
+
+    # Save the figure with correct function and parameters
+    chart_name = f"chart_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.png"
+    plt.savefig(chart_name)
     
 
 def main():
@@ -176,22 +228,24 @@ def main():
     conn = setup_sqlite_db()
     
     # Define file sizes to test (in rows)
-    file_sizes = [1000, 10000, 100000
-                  ,1000000,
-                   2000000,
-                   1000000,
-                   2000000,
-                   3000000,
-                   4000000,
-                   5000000,
-                   6000000,
-                   7000000,
-                   8000000,
-                   9000000,
-                   10000000,
-                   25000000,
-                   50000000,
-                   100000000
+    file_sizes = [
+                # 1000, 10000, 100000
+                #  ,
+                1000000,
+                #    2000000,
+                #    1000000,
+                #    2000000,
+                #    3000000,
+                #    4000000,
+                #    5000000,
+                #    6000000,
+                #    7000000,
+                #    8000000,
+                #    9000000,
+                #   10000000,
+                #    25000000,
+                #    50000000,
+                #   100000000
                    ]
 
     # First loop: Generate data files
@@ -240,10 +294,11 @@ def main():
                     store_benchmark_result(conn, size, file_size_mb, f"{operation}", tool, execution_time)
                 except Exception as e:
                     print(f"Error storing results: {e}")
-
-    
     conn.close()
+    generate_benchmark_image()
+
     print("\nBenchmarking completed. Results stored in benchmark_results.db")
+    
 
 if __name__ == "__main__":
     main()

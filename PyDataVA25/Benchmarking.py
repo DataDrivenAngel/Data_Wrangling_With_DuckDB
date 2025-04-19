@@ -182,7 +182,7 @@ def generate_benchmark_image():
     , file_size
     , regexp_replace(operation, '\d+$', '') as operation      -- remove trailing integers
     , execution_time
-    where date_trunc('day',  timestamp) = '2025-04-19'
+   -- where date_trunc('day',  timestamp) = '2025-04-19'
 
     """).to_df()
 
